@@ -29,7 +29,7 @@
       <span class="wordmark sm"><span class="sp-speedy">Speedy</span><span class="sp-list">List</span><span class="sp-ai">AI</span></span>
       <span class="catpill" id="catPill">Apparel</span>
     </a>
-    <nav class="topnav" aria-label="Sections"><a href="#list">List</a><a href="#how">How it works</a><a href="#where">Where it lists</a></nav>
+    <nav class="topnav" aria-label="Sections"><a href="#list">List</a><a href="#connect">Connect</a><a href="#how">How it works</a><a href="#where">Where it lists</a></nav>
     <button class="btn ghost sm" id="installBtn" hidden>Install</button>
     <button class="iconbtn" id="themeBtn" aria-label="Toggle light / dark mode" title="Light / dark">
       <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.5 12h3M19.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
@@ -128,10 +128,19 @@
                 <div class="field"><label for="descIn">Description</label><textarea id="descIn" rows="6"></textarea></div>
                 <div class="field"><label for="kwIn">Keywords / tags <span class="tiny">comma separated</span></label><input id="kwIn"></div>
               </div>
-              <div class="post-card">
-                <div class="post-head"><h3>Copy to a marketplace</h3></div>
-                <div class="mtabs" id="mtabs" role="tablist" aria-label="Marketplaces"></div>
+              <div class="post-card" id="postCard">
+                <div class="post-head">
+                  <h3>Post to</h3>
+                  <a class="linkbtn" href="#connect" id="manageConn">Manage sites</a>
+                </div>
+                <div class="conn-chips" id="connChips"></div>
+                <div class="conn-nudge" id="connNudge" hidden>
+                  <span>Pick your sites once and they're ready on every listing.</span>
+                  <button class="btn primary sm" type="button" data-act="connect-all">Add all sites</button>
+                </div>
+                <div class="mtabs" id="mtabs" role="tablist" aria-label="Your marketplaces"></div>
                 <div class="mpanel" id="mpanel"></div>
+                <p class="demo-note center">Tap Copy on each field (or Copy all), open the site, paste and hit Publish.</p>
                 <div class="done-row">
                   <button class="btn ghost" id="saveBtn" type="button">Save to my items</button>
                   <button class="btn ghost" id="againBtn" type="button">List another item</button>
@@ -145,7 +154,25 @@
     </div>
   </section>
 
-  <section class="sec alt" id="how">
+  <section class="sec alt" id="connect">
+    <div class="wrap">
+      <div class="sec-head row">
+        <div>
+          <span class="kicker ap">Connect your marketplaces</span>
+          <h2>Connect once. Post everywhere.</h2>
+          <p class="sub">Pick the sites you sell on once. For each listing, Speedy List writes that site's version, you tap Copy, open the site, paste and tap Publish. <span class="mbadge direct">Direct</span> sites have an official seller API; posting is still copy &amp; open today.</p>
+        </div>
+        <div class="connect-actions">
+          <button class="btn primary lg" type="button" data-act="connect-all">Connect all</button>
+          <span class="tiny" id="connSummary">0 set up</span>
+        </div>
+      </div>
+      <div class="conn-grid" id="connGrid"></div>
+      <p class="demo-note center">Your picks are saved only in this browser. Speedy List never asks for your marketplace passwords.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
     <div class="wrap">
       <div class="sec-head"><span class="kicker ap">How it works</span><h2>Four steps. About a minute.</h2></div>
       <ol class="how">
@@ -157,7 +184,7 @@
     </div>
   </section>
 
-  <section class="sec" id="where">
+  <section class="sec alt" id="where">
     <div class="wrap">
       <div class="sec-head"><span class="kicker ap">Where it lists</span><h2>Every place clothes sell.</h2>
         <p class="sub">Speedy List writes a version for each site. Tap Copy, open the site, paste and Publish under your own login. Speedy List never asks for your passwords.</p></div>
@@ -175,6 +202,8 @@
     <p class="foot-note">Waynesboro, VA &nbsp;·&nbsp; &copy; 2026 Speedy List AI &nbsp;·&nbsp; <span id="verTag"></span></p>
   </div>
 </footer>
+<div class="modal" id="modal" hidden><div class="modal-back" data-act="close"></div><div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="modalBox"></div></div>
+<div class="sheet" id="sheet" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="js/categories.js"></script>
 <script src="js/markets.js"></script>

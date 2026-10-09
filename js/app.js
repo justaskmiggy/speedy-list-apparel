@@ -2,7 +2,7 @@
    marketplace formatting from js/markets.js (SLM). Real AI via the server; the OpenAI key never reaches the browser. */
 (function () {
 'use strict';
-const APP_VER = 'apparel-v3';
+const APP_VER = 'apparel-v4';
 const qs = new URLSearchParams(location.search);
 const P = SLC.PACKS[qs.get('cat')] || SLC.PACKS[SLC.ACTIVE];
 const $ = (s, r = document) => r.querySelector(s);
@@ -16,6 +16,10 @@ const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 const MK = P.markets.map(id => Object.assign({ id }, SLM.M[id]));
 const mono = m => `<span class="mono" style="background:${m.hue}">${esc(m.mono)}</span>`;
+const nmH = m => esc(m.name).replace(/([a-z])([A-Z])/g, '$1<wbr>$2');
+const badge = m => `<span class="mbadge ${m.method}">${{ direct: 'Direct', assisted: 'Assisted', consign: 'Consign', planned: 'Planned' }[m.method] || 'Assisted'}</span>`;
+const byId = id => MK.find(m => m.id === id);
+const shortNm = m => m.name.replace(' Marketplace', '');
 const ITEMS_KEY = 'sla.' + P.id + '.items.v1';
 
 let tt; function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400); }
@@ -35,7 +39,105 @@ $('#sampleBtn').textContent = P.sample ? 'No photo handy? ' + P.sample.label : '
 $('#mkStrip').innerHTML = MK.map(m => `<span>${esc(m.name)}</span>`).join('');
 const WHERE = { ebay: 'Item specifics filled in for you. Biggest national audience.', poshmark: 'Brand, size, NWT and style tags ready.', depop: 'Hashtags and Gen-Z friendly copy.',
   mercari: 'Quick listing, shipping-label friendly.', facebook: 'Local pickup and "Message me" copy.', etsy: 'Vintage only (20+ years). 13 tags written for you.', shopify: 'Product copy plus a CSV for bulk import.' };
-$('#whereGrid').innerHTML = MK.map(m => `<article><h3>${mono(m)}${esc(m.name)}</h3><p>${esc(WHERE[m.id] || '')}</p></article>`).join('');
+Object.assign(WHERE, { grailed: 'Menswear, streetwear and designer.', vinted: 'No seller fees for you; buyers pay a protection fee.', thredup: "Consignment: mail it in, they list it. Nothing to paste." });
+$('#whereGrid').innerHTML = MK.map(m => `<article><h3>${mono(m)}${esc(m.name)} ${badge(m)}</h3><p>${esc(WHERE[m.id] || '')}</p><p class="tiny">${esc(m.how || '')}</p></article>`).join('');
+
+/* ---------- connections (ported from the equipment app). "Connect" = you add the site once: we explain how posting works,
+   mark it Ready in this browser (localStorage) and show its tab on every listing. No OAuth, no passwords, no API access. ---------- */
+const CONN_KEY = 'sla.' + P.id + '.connections.v1';
+let conns = LS.get(CONN_KEY, {});
+const connStatus = id => (conns[id] && conns[id].status) || null; // 'ready' | null ('connected' reserved for a real API login, not used yet)
+const anyConn = () => MK.some(m => connStatus(m.id));
+const shopStore = () => (conns.shopify && conns.shopify.store) || '';
+const cleanStore = v => String(v || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\.myshopify\.com.*$/, '').replace(/[^a-z0-9-]/g, '').slice(0, 60);
+const siteUrl = m => m.id === 'shopify' && shopStore() ? `https://${shopStore()}.myshopify.com/admin/products/new` : m.site;
+function setConn(id, status, extra) {
+  if (status) conns[id] = Object.assign({ status, at: Date.now() }, conns[id] && conns[id].store ? { store: conns[id].store } : {}, extra || {}); else delete conns[id];
+  LS.set(CONN_KEY, conns); renderConnGrid(); renderPostChecks();
+}
+let modalResolve = null;
+function openModal(html) { $('#modalBox').innerHTML = html; $('#modal').hidden = false; document.body.style.overflow = 'hidden';
+  const f = $('#modalBox [data-autofocus]') || $('#modalBox button'); f && f.focus(); return new Promise(r => { modalResolve = r; }); }
+function closeModal(val) { $('#modal').hidden = true; document.body.style.overflow = ''; const r = modalResolve; modalResolve = null; r && r(val); }
+$('#modal').addEventListener('click', e => { const a = e.target.closest('[data-act]'); if (a && a.dataset.act === 'close') closeModal(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(false); });
+const mhead = t => `<div class="mhead"><h3 id="modalTitle">${t}</h3><button class="mclose" data-act="close" aria-label="Close">${ICON_X}</button></div>`;
+/* Add one site: one-time explanation of how posting works (Shopify also asks for the store address). */
+async function siteSetup(m) {
+  const shop = m.id === 'shopify';
+  const p = openModal(`${mhead('Add ' + esc(m.name))}<div class="mbody">
+    <p>How posting to ${esc(m.name)} works:</p>
+    ${m.consign ? `<ol class="steps3"><li><span>Speedy List adds the item to your Clean Out list.</span></li><li><span>Tap <b>Open ThredUp</b> and order a free Clean Out Kit.</span></li><li><span>Mail it in. ThredUp prices and lists it for you.</span></li></ol>`
+      : `<ol class="steps3"><li><span>Speedy List writes the ${esc(m.name)} version of your listing from your photos.</span></li><li><span>Tap <b>Copy</b> (or Copy all), then <b>Open ${esc(shortNm(m))}</b>${shop ? ' to a new product in your store' : ''}.</span></li><li><span>Paste, add your photos and tap <b>Publish</b>.</span></li></ol>`}
+    ${shop ? `<div class="field"><label for="shopIn">Your Shopify store address</label><div class="shop-in"><input id="shopIn" placeholder="yourstore" value="${esc(shopStore())}" autocomplete="off" autocapitalize="off" spellcheck="false" data-autofocus><span>.myshopify.com</span></div>
+      <p class="tiny">Open goes straight to <b>Add product</b> in your admin. Leave blank to open the Shopify admin home. Shopify also has the CSV import.</p></div>` : ''}
+    ${m.method === 'direct' ? `<p class="tiny">${esc(m.name)} has an official seller API. Speedy List doesn't use it yet, so posting is copy &amp; open for now.</p>` : ''}
+    <p class="tiny">Use your normal ${esc(m.name)} login on their site. Speedy List never asks for your password.</p>
+    <div class="mfoot"><button class="btn primary" id="gotIt" ${shop ? '' : 'data-autofocus'}>Got it</button></div></div>`);
+  $('#gotIt').addEventListener('click', () => closeModal(shop ? { store: cleanStore($('#shopIn').value) } : true));
+  const ok = await p;
+  if (ok) { setConn(m.id, 'ready', typeof ok === 'object' ? ok : null); toast(`${m.name} added`); }
+  return ok;
+}
+async function connectAll() {
+  const rows = MK.map(m => `<li data-id="${m.id}">${mono(m)}<span class="nm">${esc(m.name)}</span><span class="st">${connStatus(m.id) ? 'Already set' : 'Waiting'}</span></li>`).join('');
+  const p = openModal(`${mhead('Connect all marketplaces')}<div class="mbody">
+    <div class="cbar"><i id="cbarFill"></i></div><ul class="clist">${rows}</ul>
+    <p class="tiny" id="callNote">Adding your sites so every listing is ready to copy and post.</p>
+    <div class="mfoot"><button class="btn primary" id="callDone" disabled>Adding...</button></div></div>`);
+  $('#callDone').addEventListener('click', () => closeModal(true));
+  let i = 0;
+  for (const m of MK) {
+    i++; const li = $(`.clist li[data-id="${m.id}"]`), stt = li && li.querySelector('.st');
+    if (!li || $('#modal').hidden) break;
+    li.scrollIntoView({ block: 'nearest' });
+    if (!connStatus(m.id)) { stt.innerHTML = '<span class="spinner"></span>Adding...'; await sleep(140); conns[m.id] = Object.assign({}, conns[m.id], { status: 'ready', at: Date.now() }); }
+    stt.className = 'st rd'; stt.innerHTML = `<span class="check or">${ICON_CHECK}</span>Ready`;
+    const f = $('#cbarFill'); if (f) f.style.width = (i / MK.length * 100) + '%';
+  }
+  LS.set(CONN_KEY, conns); renderConnGrid(); renderPostChecks();
+  const b = $('#callDone'); if (b) { b.disabled = false; b.textContent = 'Done'; }
+  const n = $('#callNote'); if (n) n.innerHTML = `<b>All set.</b> ${MK.filter(m => connStatus(m.id)).length} sites ready. Each listing gets a tab for every site.${connStatus('shopify') && !shopStore() ? ' Add your Shopify store address under Manage sites so Open goes straight to Add product.' : ''}`;
+  await p;
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-act]'); if (!a || a.closest('#modal')) return;
+  const act = a.dataset.act;
+  if (act === 'connect-all') { e.preventDefault(); hideSheet(); connectAll(); }
+  if (act === 'connect') { e.preventDefault(); const m = byId(a.dataset.id); if (m) siteSetup(m); }
+  if (act === 'disconnect') { e.preventDefault(); const m = byId(a.dataset.id); setConn(a.dataset.id, null); toast(m.name + ' removed'); }
+});
+function renderConnGrid() {
+  $('#connGrid').innerHTML = MK.map(m => {
+    const s = connStatus(m.id);
+    const extra = m.id === 'shopify' && s ? (shopStore() ? ` Store: <b>${esc(shopStore())}.myshopify.com</b>` : ' <b>Add your store address</b> (tap Ready) so Open goes to Add product.') : '';
+    const stat = s ? `<div class="stat ready"><span class="check or">${ICON_CHECK}</span> <b>Ready</b> - ${m.consign ? 'item goes on your Clean Out list.' : 'we write it, you copy, paste and tap Publish.'}${extra}</div>`
+      : `<div class="stat">${m.consign ? 'ThredUp lists it for you. Nothing to paste.' : m.method === 'direct' ? 'Official seller API. Copy &amp; open today.' : 'No login needed here. We copy, you paste and tap Publish.'}</div>`;
+    const btn = s ? `<button class="btn ready sm" data-act="connect" data-id="${m.id}">${ICON_CHECK.replace('<svg', '<svg width="16" height="16"')} Ready</button><button class="linkbtn" data-act="disconnect" data-id="${m.id}">Remove</button>`
+      : `<button class="btn primary sm" data-act="connect" data-id="${m.id}">Connect</button>`;
+    return `<div class="ccard ${s ? 'ready' : ''}"><div class="ccard-top">${mono(m)}<h3>${nmH(m)}</h3>${badge(m)}</div>${stat}<div class="row">${btn}</div></div>`;
+  }).join('');
+  $('#connSummary').textContent = `${MK.filter(m => connStatus(m.id)).length} of ${MK.length} set up`;
+}
+/* "Post to" chips + tabs: only the sites you've connected. */
+function renderPostChecks() {
+  const rd = MK.filter(m => connStatus(m.id));
+  $('#connChips').innerHTML = rd.length ? rd.map(m => `<span class="cchip ready">${ICON_CHECK}${esc(shortNm(m))}</span>`).join('') : '<span class="cchip">No sites picked yet</span>';
+  $('#connNudge').hidden = anyConn();
+  if (rd.length && !rd.some(m => m.id === st.tab)) st.tab = rd[0].id;
+  $('#mtabs').innerHTML = rd.map(m => `<button type="button" class="mtab" role="tab" data-tab="${m.id}">${mono(m)}${esc(shortNm(m))}${st.posted && st.posted[m.id] ? `<span class="st-ok" title="Published">${ICON_CHECK}</span>` : ''}</button>`).join('');
+  renderMarket();
+}
+function maybeOnboard() {
+  if (LS.get('sla.' + P.id + '.onboarded', false) || anyConn()) return;
+  LS.set('sla.' + P.id + '.onboarded', true);
+  setTimeout(() => { const sh = $('#sheet');
+    sh.innerHTML = `<h3><img src="assets/brand/roadrunner-tile-64.png" width="32" height="32" alt="">Pick your marketplaces in 30 seconds</h3>
+      <p>Pick your sites once and every listing gets a tab for each one. No passwords needed.</p>
+      <div class="mfoot"><button class="btn primary" data-act="connect-all">Connect all</button><button class="btn ghost" id="sheetLater">Later</button></div>`;
+    sh.hidden = false; $('#sheetLater').addEventListener('click', hideSheet); }, 900);
+}
+function hideSheet() { $('#sheet').hidden = true; }
 
 /* ---------- photo slots ---------- */
 const SHOTS = P.shots, MAX_SHOTS = SHOTS.length, REQ = SHOTS.filter(x => x.req), KEYS = SHOTS.filter(x => x.key);
@@ -153,6 +255,7 @@ async function startAnalysis() {
   $('#scanImg').src = st.urls[0];
   await runAnalysis();
   $('#flow').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  maybeOnboard();
 }
 async function runAnalysis() {
   const run = ++st.run; showStep('stepId');
@@ -163,7 +266,7 @@ async function runAnalysis() {
   catch (e) { console.info('[Speedy AI]', e.message); item = BLANK(); why = e.why || "Speedy AI couldn't finish this one. Tap Analyze again."; }
   await anim; if (run !== st.run) return;
   item.sku = 'SL' + Date.now().toString(36).toUpperCase().slice(-6);
-  st.item = item; st.aiWhy = why; st.cond = item.cond;
+  st.item = item; st.aiWhy = why; st.cond = item.cond; st.posted = {};
   st.priceDirty = st.titleDirty = st.descDirty = st.bonusDirty = false;
   loadItem(); showStep('stepResult');
 }
@@ -229,22 +332,26 @@ function reprice() {
 }
 function priceState() { const need = !(st.price > 0); $('#priceIn').classList.toggle('need', need); $('#priceNeed').hidden = !need; return !need; }
 
-/* ---------- marketplace tabs ---------- */
-$('#mtabs').innerHTML = MK.map(m => `<button type="button" class="mtab" role="tab" data-tab="${m.id}">${mono(m)}${esc(m.name.replace(' Marketplace', ''))}</button>`).join('');
-$('#mtabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; st.tab = b.dataset.tab; renderMarket(); });
+/* ---------- marketplace tabs (connected sites only) ---------- */
+$('#mtabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; st.tab = b.dataset.tab; renderPostChecks(); });
 const curItem = () => Object.assign({}, st.item, { price: st.price, retail: st.retail, cond: st.cond });
 let lastOut = null;
 function renderMarket() {
   if (!st.item) return;
   const it = curItem();
+  const m = connStatus(st.tab) && byId(st.tab);
   $$('#mtabs .mtab').forEach(b => { b.classList.toggle('on', b.dataset.tab === st.tab); b.classList.toggle('off', !!(SLM.M[b.dataset.tab].vintageOnly && !it.isVintage)); });
-  const m = MK.find(x => x.id === st.tab), out = m.build(it, P); lastOut = out;
+  if (!m) { lastOut = null; $('#mpanel').innerHTML = `<div class="mempty">Connect the sites you sell on and each one gets its own ready-to-paste listing here.<div class="mact" style="margin-top:10px"><button class="btn primary" type="button" data-act="connect-all">Connect all</button><a class="btn ghost" href="#connect">Pick sites</a></div></div>`; return; }
+  const out = m.build(it, P); lastOut = out;
   const rows = out.fields.map((f, i) => { const v = String(f.value || ''); const over = f.max && v.length > f.max;
     return `<div class="mrow"><div class="mrow-h"><span>${esc(f.label)}${f.max ? ` <span class="${over ? 'gold' : ''}">${v.length}/${f.max}</span>` : ''}</span>${v ? `<button type="button" class="cbtn" data-copy="${i}">Copy</button>` : ''}</div>
       <div class="mrow-v ${v ? '' : 'empty'}">${v ? esc(v) : 'Not set, add it above'}</div></div>`; }).join('');
+  const posted = st.posted && st.posted[m.id];
   $('#mpanel').innerHTML = (out.warn ? `<div class="mwarn">${esc(out.warn)}</div>` : '') + rows + (out.note ? `<p class="mnote">${esc(out.note)}</p>` : '') +
-    `<div class="mact"><button class="btn primary" type="button" data-copy="all">Copy all</button><a class="btn ghost" href="${esc(m.site)}" target="_blank" rel="noopener">Open ${esc(m.name.replace(' Marketplace', ''))}</a></div>` +
-    (m.csv ? `<div class="mact"><button class="btn ghost" type="button" id="csvOne">Download CSV (this item)</button><button class="btn ghost" type="button" id="csvAll">Batch CSV (${savedItems().length})</button></div>` : '');
+    (m.id === 'shopify' && !shopStore() ? `<p class="mnote">Tip: add your store address (Manage sites, tap Ready on Shopify) and Open goes straight to Add product.</p>` : '') +
+    `<div class="mact"><button class="btn primary" type="button" data-copy="all">Copy all</button><a class="btn ghost" href="${esc(siteUrl(m))}" target="_blank" rel="noopener">Open ${esc(shortNm(m))}${m.id === 'shopify' && shopStore() ? ': Add product' : ''}</a></div>` +
+    (m.csv ? `<div class="mact"><button class="btn ghost" type="button" id="csvOne">Download CSV (this item)</button><button class="btn ghost" type="button" id="csvAll">Batch CSV (${savedItems().length})</button></div>` : '') +
+    `<div class="mact"><button class="btn ${posted ? 'ok' : 'ghost'}" type="button" id="pubBtn">${posted ? ICON_CHECK.replace('<svg', '<svg width="16" height="16"') + ' Published on ' + esc(shortNm(m)) : 'I published it on ' + esc(shortNm(m))}</button></div>`;
 }
 async function copyText(t) { try { await navigator.clipboard.writeText(t); return true; } catch (e) {
   const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
@@ -255,6 +362,7 @@ $('#mpanel').addEventListener('click', async e => {
     const t = b.dataset.copy === 'all' ? lastOut.fields.filter(f => f.value).map(f => f.label + ':\n' + f.value).join('\n\n') : String(lastOut.fields[+b.dataset.copy].value);
     if (await copyText(t)) { toast(b.dataset.copy === 'all' ? 'Whole listing copied' : 'Copied'); b.classList.add('done'); b.textContent = b.dataset.copy === 'all' ? 'Copied all' : 'Copied'; } else toast('Copy blocked. Long-press the text to copy.');
     return; }
+  if (e.target.closest('#pubBtn')) { st.posted = st.posted || {}; st.posted[st.tab] = !st.posted[st.tab]; renderPostChecks(); return; }
   if (e.target.id === 'csvOne') { if (!priceState()) { toast('Enter your price first'); return; } download(SLM.csv([curItem()], P), `shopify-${st.item.sku}.csv`); }
   if (e.target.id === 'csvAll') { const all = savedItems(); if (!all.length) { toast('Tap "Save to my items" first, then export the batch'); return; } download(SLM.csv(all, P), `shopify-batch-${all.length}-items.csv`); }
 });
@@ -268,6 +376,7 @@ $('#saveBtn').addEventListener('click', () => { if (!priceState()) { toast('Ente
 $('#againBtn').addEventListener('click', () => { resetShots(); showStep('stepDrop'); $('#list').scrollIntoView({ behavior: 'smooth' }); });
 
 /* init */
-renderShots(); savedNote();
-window.SpeedyList = { pack: P, version: APP_VER, addFiles };
+renderShots(); savedNote(); renderConnGrid(); renderPostChecks();
+if (location.hash === '#connect-all') setTimeout(connectAll, 300);
+window.SpeedyList = { pack: P, version: APP_VER, addFiles, connectAll, reset() { localStorage.removeItem(CONN_KEY); localStorage.removeItem('sla.' + P.id + '.onboarded'); conns = {}; renderConnGrid(); renderPostChecks(); } };
 })();

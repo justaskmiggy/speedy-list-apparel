@@ -62,6 +62,25 @@ window.SLM = (function () {
           { label: 'Option: Size', value: it.size }, { label: 'Price', value: money(it.price) }, { label: 'SKU', value: it.sku }],
           note: 'Add the photos in Shopify after import. Use the CSV buttons to import one item or a whole batch.' }; } } };
 
+  const plain = (it, P, cond, extra) => [{ label: 'Title', value: cut(it.title, 80), max: 80 }, { label: 'Description', value: body(it, cond), long: true },
+    { label: 'Brand', value: it.brand }, { label: 'Size', value: it.size }, { label: 'Condition', value: cond }, { label: 'Color', value: it.color }, { label: 'Price', value: money(it.price) }].concat(extra || []);
+  M.grailed = { name: 'Grailed', mono: 'G', hue: '#111111', site: 'https://www.grailed.com/sell/new',
+    build: (it, P) => { const c = { nwt: 'New/Never Worn', nwot: 'New/Never Worn', exc: 'Gently Used', good: 'Used', fair: 'Very Worn' }[it.cond];
+      return { fields: plain(it, P, c, [{ label: 'Category', value: list([it.department, it.itemType]).join(' > ') }]), note: "Grailed is menswear and designer focused (it also has a women's section)." }; } };
+  M.vinted = { name: 'Vinted', mono: 'V', hue: '#09b1ba', site: 'https://www.vinted.com/items/new',
+    build: (it, P) => { const c = { nwt: 'New with tags', nwot: 'New without tags', exc: 'Very good', good: 'Good', fair: 'Satisfactory' }[it.cond];
+      return { fields: plain(it, P, c, [{ label: 'Material', value: it.material }]) }; } };
+  M.thredup = { name: 'ThredUp', mono: 'tU', hue: '#1a8a7d', site: 'https://www.thredup.com/cleanout', consign: true,
+    build: (it, P) => ({ warn: "ThredUp doesn't take seller-written listings. You mail items in a Clean Out Kit and ThredUp prices and lists them, so there's nothing to paste.",
+      fields: [{ label: 'Item for your kit list', value: list([it.brand, it.itemType, it.size && 'size ' + it.size, it.color]).join(', ') }],
+      note: 'Best for lower-value pieces you want gone without the work. Payouts are set by ThredUp.' }) };
+  // Honest posting method per site (same meaning as the equipment app):
+  // direct = an official seller API exists (posting today is still copy & open); assisted = we prepare it, you paste and Publish; consign = the site lists it for you (ThredUp), nothing to paste.
+  const META = { ebay: ['direct', 'Official Sell Inventory API (eBay OAuth).'], etsy: ['direct', 'Official Etsy Open API v3 (draft listings).'], shopify: ['direct', 'Official Shopify Admin API (your own store).'],
+    poshmark: ['assisted', 'No open listing API for third-party apps.'], depop: ['assisted', 'Selling API is limited to approved partners.'], mercari: ['assisted', 'No open listing API for third-party apps.'],
+    facebook: ['assisted', 'Listing API is limited to partners.'], grailed: ['assisted', 'No open listing API for third-party apps.'], vinted: ['assisted', 'Pro integrations only; no open listing API.'],
+    thredup: ['consign', 'Consignment: you mail it in, ThredUp lists it. No listing API.'] };
+  Object.keys(META).forEach(id => { if (M[id]) { M[id].method = META[id][0]; M[id].how = META[id][1]; } });
   function shopifyTags(it) { return Array.from(new Set(list([it.department, it.kind, it.brand, it.isVintage && 'vintage', it.era && !/modern/i.test(it.era) && it.era, P_cond(it)].concat(list(it.keywords).slice(0, 10))).map(s => String(s).trim()))); }
   const P_cond = it => ({ nwt: 'new with tags', nwot: 'new without tags', exc: 'excellent', good: 'good', fair: 'fair' }[it.cond]);
   function shopifyHtml(it, c) {

@@ -79,6 +79,7 @@ SLC.PACKS = {
     shopifyCategory: it => ({ shoes: 'Apparel & Accessories > Shoes', bag: 'Apparel & Accessories > Handbags, Wallets & Cases', jewelry: 'Apparel & Accessories > Jewelry', hat: 'Apparel & Accessories > Clothing Accessories > Hats', accessory: 'Apparel & Accessories > Clothing Accessories' }[it.kind] || 'Apparel & Accessories > Clothing'),
     // Etsy only allows handmade, vintage (20+ years) or craft supplies. Resale of modern clothing is not allowed.
     etsyRule: 'Etsy only allows vintage items that are at least 20 years old (or handmade). Modern resale clothing isn\'t allowed there.',
-    markets: ['ebay', 'poshmark', 'depop', 'mercari', 'facebook', 'etsy', 'shopify'] }
+    markets: ['ebay', 'etsy', 'poshmark', 'depop', 'mercari', 'facebook', 'shopify', 'grailed', 'vinted', 'thredup'],
+    starterMarkets: ['ebay', 'poshmark', 'depop', 'facebook'] }
 };
 SLC.ACTIVE = 'apparel';
