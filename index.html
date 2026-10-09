@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speedy List AI – Apparel · List it fast. Sell it faster.</title>
+<meta name="description" content="Speedy List AI – Apparel: photos of clothing, shoes and accessories become a priced listing for Etsy, Shopify, Poshmark, eBay, Depop, Mercari and Facebook Marketplace.">
+<meta name="theme-color" content="#0b0c0e">
+<meta name="color-scheme" content="dark light">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/brand/roadrunner-favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/brand/roadrunner-apple-touch-180.png" sizes="180x180">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Speedy Apparel">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta property="og:title" content="Speedy List AI – Apparel">
+<meta property="og:description" content="Snap the front, back and tags. Get a priced listing for every resale site.">
+<meta property="og:image" content="assets/brand/roadrunner-icon-512.png">
+<link rel="preload" href="assets/fonts/Barlow-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/apparel.css">
+<script>try{var t=localStorage.getItem('sla.theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="#top" aria-label="Speedy List AI Apparel home">
+      <img src="assets/brand/roadrunner-tile-64.png" width="34" height="34" alt="">
+      <span class="wordmark sm"><span class="sp-speedy">Speedy</span><span class="sp-list">List</span><span class="sp-ai">AI</span></span>
+      <span class="catpill" id="catPill">Apparel</span>
+    </a>
+    <nav class="topnav" aria-label="Sections"><a href="#list">List</a><a href="#how">How it works</a><a href="#where">Where it lists</a></nav>
+    <button class="btn ghost sm" id="installBtn" hidden>Install</button>
+    <button class="iconbtn" id="themeBtn" aria-label="Toggle light / dark mode" title="Light / dark">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1.5 12h3M19.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero ap-hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <span class="eyebrow ap" id="eyebrow">Clothing, shoes &amp; accessories</span>
+      <h1 class="wordmark xl"><span class="sp-speedy">Speedy</span><span class="sp-list">List</span><span class="sp-ai">AI</span></h1>
+      <p class="slogan">List it fast. <span>Sell it faster.</span></p>
+      <p class="lede" id="lede"></p>
+      <div class="mk-strip" id="mkStrip" aria-label="Marketplaces"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="list">
+    <div class="wrap">
+      <div class="sec-head"><span class="kicker ap">Start a listing</span><h2>Front, back, tags. Done.</h2></div>
+      <div class="flow card" id="flow">
+        <div class="step" id="stepDrop">
+          <label class="drop compact" id="drop" tabindex="0">
+            <input type="file" id="fileIn" accept="image/*" multiple hidden>
+            <div class="drop-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M22 8l-14 8 5 12 6-3v31h26V25l6 3 5-12-14-8c-2 5-6 8-10 8s-8-3-10-8z"/></svg></div>
+            <strong class="drop-title" id="dropTitle">Add photos of one item</strong>
+            <span class="drop-sub"><span class="desk">Drop photos here or click to choose</span><span class="mob">Tap to pick several from your library</span> · they fill the slots below in order</span>
+          </label>
+          <div class="shots-head" aria-live="polite"><b id="shotCount"></b><span class="shot-flags" id="shotFlags"></span></div>
+          <p class="tiny shots-tip">Front and back are required. Get the <b>brand tag</b> and <b>size / care tag</b> sharp so the AI can read them. Show any <b>flaws</b> up close (or tick "No flaws"). Tap any slot to take or replace that photo.</p>
+          <div class="shots" id="shots" role="list" aria-label="Photo slots"></div>
+          <div class="field"><label for="notesIn">Anything the photos don't show? <span class="tiny">optional</span></label><input id="notesIn" maxlength="300" placeholder="e.g. bought new in 2019, smoke-free home, size tag cut"></div>
+          <button class="btn primary lg block" id="analyzeBtn" type="button" disabled>Add photos</button>
+          <p class="tiny center" id="analyzeWhy"></p>
+          <div class="sample-row"><button class="linkbtn" id="sampleBtn" type="button"></button></div>
+        </div>
+
+        <div class="step" id="stepId" hidden>
+          <div class="thumbs" id="thumbs"></div>
+          <div class="ident">
+            <div class="scan"><img id="scanImg" alt=""><span class="scanline"></span></div>
+            <div class="ident-copy">
+              <h3><span class="spinner"></span> Reading your photos...</h3>
+              <ul class="ident-steps" id="identSteps"><li>Reading the brand tag</li><li>Size, fabric &amp; made in</li><li>Checking for flaws</li><li>Pricing &amp; writing listings</li></ul>
+              <p class="demo-note">Speedy AI is on it. About 15-30 seconds.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" id="stepResult" hidden>
+          <div class="result-grid">
+            <div class="col">
+              <div class="item-card">
+                <div class="item-photo"><img id="itemImg" alt="Your item photo"><span class="badge demo">Speedy AI</span></div>
+                <div class="item-meta">
+                  <span class="badge ok" id="itemConf">AI read</span>
+                  <h3 id="itemName"></h3>
+                  <p class="demo-note strong" id="aiNote"></p>
+                  <div class="fgrid" id="fieldGrid"></div>
+                  <label class="vchk"><input type="checkbox" id="vintageChk"> <span><b>Vintage (20+ years old)</b> <span class="tiny" id="vintageWhy"></span></span></label>
+                  <div class="field"><label for="flawsIn">Flaws <span class="tiny">one per line, buyers trust honesty</span></label><textarea id="flawsIn" rows="2" placeholder="None noted"></textarea></div>
+                  <button class="linkbtn" id="retryBtn" type="button">Not right? Analyze again</button>
+                </div>
+              </div>
+
+              <div class="price-card meas-card">
+                <div class="price-head"><h3>Measurements</h3><span class="formula-tag ap">inches, laid flat</span></div>
+                <p class="tiny">Measured items sell faster and get fewer returns. Leave blank to skip.</p>
+                <div class="meas" id="meas"></div>
+              </div>
+
+              <div class="price-card">
+                <div class="price-head"><h3>Speedy price</h3><span class="formula-tag">V = (R &times; C) + B</span></div>
+                <p class="startpt" id="startNote"></p>
+                <div class="field"><label for="retailIn" id="retailLbl">R - original retail price</label><div class="money"><span>$</span><input id="retailIn" type="number" inputmode="numeric" min="0" step="5"></div></div>
+                <div class="field"><span class="lbl">C - condition</span><div class="seg seg5" id="condSeg" role="radiogroup" aria-label="Condition"></div></div>
+                <div class="field"><label for="bonusIn">B - brand bonus <span class="gold" id="goldTag">In-demand brand</span></label>
+                  <div class="range-row"><input id="bonusIn" type="range"><output id="bonusOut">$0</output></div>
+                  <p class="tiny" id="bonusNote"></p></div>
+                <div class="calc" id="calc"></div>
+                <div class="final">
+                  <div><span class="tiny">Suggested starting price</span><div class="big" id="vOut">-</div></div>
+                  <div class="field inline"><label for="priceIn">Your price</label><div class="money"><span>$</span><input id="priceIn" type="number" inputmode="numeric" min="0" step="1" placeholder="Enter price"></div></div>
+                </div>
+                <p class="price-need" id="priceNeed" role="status" hidden>Enter your asking price. Listings can't be copied until there's a price.</p>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="listing-card">
+                <h3>Your listing <span class="tiny">written for you, edit freely</span></h3>
+                <div class="field"><label for="titleIn">Title <span class="tiny" id="titleCount">0/80</span></label><input id="titleIn" maxlength="140"></div>
+                <div class="field"><label for="descIn">Description</label><textarea id="descIn" rows="6"></textarea></div>
+                <div class="field"><label for="kwIn">Keywords / tags <span class="tiny">comma separated</span></label><input id="kwIn"></div>
+              </div>
+              <div class="post-card">
+                <div class="post-head"><h3>Copy to a marketplace</h3></div>
+                <div class="mtabs" id="mtabs" role="tablist" aria-label="Marketplaces"></div>
+                <div class="mpanel" id="mpanel"></div>
+                <div class="done-row">
+                  <button class="btn ghost" id="saveBtn" type="button">Save to my items</button>
+                  <button class="btn ghost" id="againBtn" type="button">List another item</button>
+                </div>
+                <p class="tiny center" id="savedNote"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec alt" id="how">
+    <div class="wrap">
+      <div class="sec-head"><span class="kicker ap">How it works</span><h2>Four steps. About a minute.</h2></div>
+      <ol class="how">
+        <li><span class="n">1</span><h3>Snap</h3><p>Front, back, brand tag, size/care tag and any flaws. Up to 3 detail shots.</p></li>
+        <li><span class="n">2</span><h3>AI reads it</h3><p>Brand, size, fabric, era, condition and flaws, plus what to measure.</p></li>
+        <li><span class="n">3</span><h3>Speedy price</h3><p>V = (R &times; C) + B: original retail &times; condition, plus a bonus for in-demand brands. A starting point you can change.</p></li>
+        <li><span class="n">4</span><h3>Copy &amp; post</h3><p>Each site gets its own version: Etsy tags, eBay item specifics, Depop hashtags, Shopify CSV.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec" id="where">
+    <div class="wrap">
+      <div class="sec-head"><span class="kicker ap">Where it lists</span><h2>Every place clothes sell.</h2>
+        <p class="sub">Speedy List writes a version for each site. Tap Copy, open the site, paste and Publish under your own login. Speedy List never asks for your passwords.</p></div>
+      <div class="where" id="whereGrid"></div>
+      <p class="tiny center">Marketplace names are trademarks of their owners. Speedy List AI is not affiliated with or endorsed by them.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-in">
+    <div class="foot-brand"><img src="assets/brand/roadrunner-tile-64.png" width="40" height="40" alt="">
+      <div><span class="wordmark sm"><span class="sp-speedy">Speedy</span><span class="sp-list">List</span><span class="sp-ai">AI</span></span><p class="tiny">Apparel edition · List it fast. Sell it faster.</p></div></div>
+    <div class="foot-links"><a href="https://justaskmiggy.github.io/speedy-list-ai/">Equipment edition</a><a href="mailto:justaskmiggy@gmail.com">justaskmiggy@gmail.com</a><a href="privacy.html">Privacy</a></div>
+    <p class="foot-note">Waynesboro, VA &nbsp;·&nbsp; &copy; 2026 Speedy List AI &nbsp;·&nbsp; <span id="verTag"></span></p>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/categories.js"></script>
+<script src="js/markets.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
