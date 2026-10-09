@@ -2,7 +2,7 @@
    marketplace formatting from js/markets.js (SLM). Real AI via the server; the OpenAI key never reaches the browser. */
 (function () {
 'use strict';
-const APP_VER = 'apparel-v1';
+const APP_VER = 'apparel-v2';
 const qs = new URLSearchParams(location.search);
 const P = SLC.PACKS[qs.get('cat')] || SLC.PACKS[SLC.ACTIVE];
 const $ = (s, r = document) => r.querySelector(s);
@@ -130,7 +130,7 @@ const rangeOf = r => { const lo = Math.round(+(r && r.low) || 0), hi = Math.roun
 function measFor(j) {
   const kind = P.measureKind[j.kind] || 'other';
   const ai = Array.isArray(j.measurements) ? j.measurements.filter(m => m && m.name).slice(0, 6) : [];
-  const base = ai.length ? ai.map(m => ({ name: String(m.name).slice(0, 30), how: String(m.how || '').slice(0, 90), value: m.value == null ? '' : m.value }))
+  const base = ai.length ? ai.map(m => ({ name: String(m.name).slice(0, 30), how: String(m.how || '').slice(0, 90), value: '' }))
     : (P.measure[kind] || P.measure.other).map(([name, how]) => ({ name, how, value: '' }));
   return base;
 }
@@ -172,7 +172,7 @@ async function runAnalysis() {
 const bonusKey = b => { const s = String(b || '').toLowerCase().replace(/[’']/g, "'"); if (!s) return null;
   return Object.keys(P.bonus.brands).sort((a, c) => c.length - a.length).find(k => s.includes(k.toLowerCase())) || null; };
 function defaultBonus(it) { const k = bonusKey(it.brand); if (!k) return 0; let b = P.bonus.brands[k];
-  const vb = P.bonus.vintageBonus; if (vb && it.isVintage && vb.brands.includes(k)) b += vb.extra; return Math.min(P.bonus.max, b); }
+  const vb = P.bonus.vintageBonus; if (vb && it.isVintage && vb[k]) b += vb[k]; return Math.min(P.bonus.max, b); }
 function loadItem() {
   const it = st.item;
   $('#itemImg').src = st.urls[0];
@@ -218,7 +218,7 @@ function reprice() {
   const V = st.retail > 0 ? st.retail * c.c + B : rg ? (rg.low + rg.high) / 2 : 0;
   $('#bonusOut').textContent = money(B);
   $('#goldTag').hidden = !bk;
-  $('#bonusNote').textContent = bk ? `${bk} is an in-demand brand: default ${money(defaultBonus(it))} (range ${P.bonus.range}). Slide to adjust.` : `${it.brand ? it.brand + " isn't" : "This brand isn't"} on the in-demand list, so B starts at $0. ${P.bonus.note}`;
+  $('#bonusNote').textContent = bk ? `${bk} is an in-demand brand: default ${money(defaultBonus(it))}${P.bonus.vintageBonus && P.bonus.vintageBonus[bk] && !it.isVintage ? ` (more if it's vintage: tick Vintage above)` : ''}. Range ${P.bonus.range}. Slide to adjust.` : `${it.brand ? it.brand + " isn't" : "This brand isn't"} on the in-demand list, so B starts at $0. ${P.bonus.note}`;
   $('#calc').innerHTML = st.retail > 0 ? `V = (<b>${money(st.retail)}</b> &times; <b>${c.c.toFixed(2)}</b>) + <b>${money(B)}</b> = <b>${money(V)}</b>${rg ? `<br><span class="tiny">AI resale range for comparison: ${money(rg.low)}-${money(rg.high)}${it.priceBasis ? '. ' + esc(it.priceBasis) : ''}</span>` : ''}`
     : rg ? `No original retail found, so this is Speedy AI's resale estimate: <b>${money(rg.low)} - ${money(rg.high)}</b>. Add the original retail price to use the formula.`
     : 'No price found from the photos. Type the original retail price above, or enter your asking price below.';

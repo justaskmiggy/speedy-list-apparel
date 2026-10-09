@@ -38,11 +38,12 @@ SLC.PACKS = {
     defaultCondition: 'good',
     bonus: { min: 0, max: 40, step: 5, range: '$5-$40',
       // In-demand brands (lowercase match). Edit freely.
-      brands: { 'Patagonia': 30, 'Lululemon': 25, "Arc'teryx": 40, 'Arcteryx': 40, 'Jordan': 30, 'Nike': 15, 'Carhartt': 20, "Levi's": 15, 'Levis': 15,
+      brands: { 'Patagonia': 30, 'Lululemon': 25, "Arc'teryx": 40, 'Arcteryx': 40, 'Jordan': 30, 'Nike': 15, 'Carhartt': 20, "Levi's": 5, 'Levis': 5, 'Levi Strauss': 5,
         'Coach': 25, 'Free People': 15, 'Ralph Lauren': 10, 'Polo Ralph Lauren': 10, 'The North Face': 15, 'Stussy': 20, 'Supreme': 35, 'Doc Martens': 20,
         'Dr. Martens': 20, 'Filson': 35, 'Barbour': 30, 'Anthropologie': 10, 'Madewell': 10, 'Vuori': 20, 'Alo': 20, 'Kate Spade': 15, 'Birkenstock': 20,
         'New Balance': 10, 'Harley-Davidson': 20, 'Pendleton': 20, 'L.L.Bean': 10, 'Burberry': 40, 'Gucci': 40, 'Louis Vuitton': 40 },
-      vintageBonus: { brands: ["Levi's", 'Levis', 'Carhartt', 'Harley-Davidson', 'Ralph Lauren', 'Polo Ralph Lauren'], extra: 10 },
+      // Extra bonus when the piece is marked vintage (20+ yrs). Vintage Levi's is where the money is.
+      vintageBonus: { "Levi's": 20, 'Levis': 20, 'Levi Strauss': 20, 'Carhartt': 10, 'Harley-Davidson': 15, 'Ralph Lauren': 10, 'Polo Ralph Lauren': 10, 'Pendleton': 10, 'Nike': 10 },
       note: 'In-demand brands like Patagonia, Lululemon, Nike/Jordan, Arc\'teryx, Carhartt, vintage Levi\'s, Coach, Free People and Ralph Lauren earn $5-$40.' },
 
     /* Item card fields shown to the seller, all editable. [key, label] */

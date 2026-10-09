@@ -1,5 +1,5 @@
 /* Speedy List AI – Apparel service worker: own cache name, precache app shell, network-first pages, cache-first static. */
-const VER = 'speedy-list-apparel-v1';
+const VER = 'speedy-list-apparel-v2';
 const SHELL = [
   './', 'index.html', 'privacy.html', 'manifest.webmanifest',
   'css/app.css', 'css/apparel.css', 'js/categories.js', 'js/markets.js', 'js/app.js',

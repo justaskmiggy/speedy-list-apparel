@@ -47,3 +47,5 @@
 .where h3{display:flex;gap:8px;align-items:center;font-size:17px;margin-bottom:6px}
 .where p{margin:0;font-size:13.5px;color:var(--text2)}
 .done-row{display:flex;gap:8px;margin-top:14px}.done-row .btn{flex:1}
+.result-grid>.col,.post-card,.listing-card,.mpanel,.mrow{min-width:0}
+.post-card{overflow:hidden}
