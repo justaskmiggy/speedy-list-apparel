@@ -9,7 +9,7 @@ window.SLM = (function () {
     return m.length ? 'Measurements (laid flat, inches): ' + m.map(x => `${x.name} ${x.value}"`).join(' · ') : ''; };
   const flawLine = it => it.flaws.length ? 'Flaws: ' + it.flaws.join('; ') + '.' : 'No flaws noted.';
   const facts = it => list([it.brand && 'Brand: ' + it.brand, it.size && 'Size: ' + it.size + (it.sizeType && !/Regular|Unknown/.test(it.sizeType) ? ' ' + it.sizeType : ''),
-    it.color && 'Color: ' + it.color, it.material && 'Material: ' + it.material, it.isVintage && it.era && 'Era: ' + it.era, it.madeIn && 'Made in ' + it.madeIn]).join('\n');
+    it.color && 'Color: ' + it.color, it.material && 'Material: ' + it.material, it.isVintage && it.era && !/modern/i.test(it.era) && 'Era: ' + it.era, it.madeIn && 'Made in ' + it.madeIn]).join('\n');
   function body(it, cond, close) {
     return list([it.desc, `Condition: ${cond}. ${it.conditionNote || ''}`.trim(), flawLine(it), measLine(it), facts(it), close || 'Message me with any questions or if you want more photos.']).join('\n\n');
   }
@@ -51,7 +51,7 @@ window.SLM = (function () {
       build: (it, P) => { const c = P.marketCondition.etsy[it.cond]; const tags = etsyTags(it);
         const t = cut(/vintage/i.test(it.title) ? it.title : `Vintage ${it.era && !/modern/i.test(it.era) ? it.era + ' ' : ''}${it.title}`, 140);
         return { warn: it.isVintage ? '' : P.etsyRule + ' Tick "Vintage (20+ years)" above only if this piece truly is.',
-          fields: [{ label: 'Title', value: t, max: 140 }, { label: 'About: who / what / when', value: `Another company or person · A finished product · ${it.era || 'Check decade'}` },
+          fields: [{ label: 'Title', value: t, max: 140 }, { label: 'About: who / what / when', value: `Another company or person · A finished product · ${it.era && !/modern/i.test(it.era) ? it.era : 'Pick the decade (20+ years ago)'}` },
             { label: 'Description', value: body(it, c) + (it.vintageEvidence ? '\n\nVintage details: ' + it.vintageEvidence : ''), long: true },
             { label: `Tags (${tags.length}/13)`, value: tags.join(', ') }, { label: 'Materials', value: it.material }, { label: 'Price', value: money(it.price) }],
           note: P.etsyRule }; } },

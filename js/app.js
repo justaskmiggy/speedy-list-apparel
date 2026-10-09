@@ -2,7 +2,7 @@
    marketplace formatting from js/markets.js (SLM). Real AI via the server; the OpenAI key never reaches the browser. */
 (function () {
 'use strict';
-const APP_VER = 'apparel-v2';
+const APP_VER = 'apparel-v3';
 const qs = new URLSearchParams(location.search);
 const P = SLC.PACKS[qs.get('cat')] || SLC.PACKS[SLC.ACTIVE];
 const $ = (s, r = document) => r.querySelector(s);
@@ -142,7 +142,7 @@ function fromAI(j) {
     title: cleanText(j.title).slice(0, 80) || [j.brand, j.itemType].filter(Boolean).join(' '), desc: cleanText(j.description), conditionNote: cleanText(j.conditionReason),
     keywords: cleanArr(j.keywords).slice(0, 20), etsyTags: cleanArr(j.etsyTags), hashtags: cleanArr(j.hashtags),
     retail: Math.round(+j.retailPrice || 0), range: rangeOf(j.resaleRange), priceBasis: cleanText(j.priceBasis),
-    review: cleanArr(j.needsReview).slice(0, 5), confidence: j.confidence || 'low', cond: P.aiCondition[j.condition] || P.defaultCondition };
+    review: cleanArr(j.needsReview).slice(0, 5).map(x => x.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().replace(/^made in$/, 'made in (country)')), confidence: j.confidence || 'low', cond: P.aiCondition[j.condition] || P.defaultCondition };
 }
 const BLANK = () => ({ ai: false, brand: '', itemType: '', kind: 'other', department: '', size: '', sizeType: '', color: '', material: '', pattern: '', style: '', era: '', isVintage: false,
   vintageEvidence: '', madeIn: '', sleeveLength: '', neckline: '', closure: '', fit: '', features: [], flaws: [], meas: P.measure.other.map(([name, how]) => ({ name, how, value: '' })),
